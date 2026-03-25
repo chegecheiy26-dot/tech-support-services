@@ -37,7 +37,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error("Could not connect to the local API. Make sure `npm.cmd run api` is running.");
+    throw new Error("Could not connect to the API. Make sure the backend is running or deployed correctly.");
   }
 
   const data = await response.json().catch(() => ({}));

@@ -18,35 +18,105 @@ npm run dev
 
 The API runs on `http://localhost:3001` and creates the SQLite database at `data/app.db`.
 
-## Go Live With GitHub + Render
+## Go Live With GitHub + Cloudflare Pages + D1
 
-This app now deploys best as two services from the same GitHub repo:
+This repo can now go live on Cloudflare without relying on a local SQLite file:
 
-- `tech-support-web`: static frontend
-- `tech-support-api`: Node API with SQLite
+- the frontend deploys as a static Vite site on Cloudflare Pages
+- the `/api/*` routes run as Cloudflare Pages Functions
+- the production database lives in Cloudflare D1
 
-Use the included [render.yaml](./render.yaml) Blueprint on Render.
+Important notes:
 
-Important deployment note:
+- your local database at `data/app.db` stays on your computer for local development
+- the live site uses a separate hosted D1 database
+- `/api` stays the same on the frontend, so no production `VITE_API_URL` is needed when Pages Functions and the site are deployed together
 
-- GitHub Pages cannot host this full app because the project needs a Node API and SQLite.
-- SQLite persistence on Render requires a paid web service with a persistent disk.
+### 1. Log in to Cloudflare Wrangler
 
-High-level deployment flow:
+```bash
+npx wrangler login
+```
 
-1. Push this project to a GitHub repository.
-2. In Render, create a new Blueprint from that GitHub repo.
-3. For the API service, set:
-   - `SMTP_USER`
-   - `SMTP_PASS`
-   - `SMTP_FROM`
-4. For the frontend service, set:
-   - `VITE_API_URL`
-   - Example: `https://your-api-service.onrender.com/api`
-5. Deploy both services.
-6. Open the frontend Render URL on any device.
+### 2. Create the live D1 database
 
-The API health check is available at `/api/health`.
+```bash
+npx wrangler d1 create tech-support-services-db
+```
+
+Save the database name. You will bind it to the Pages project as `DB`.
+
+### 3. Apply the schema migrations
+
+```bash
+npx wrangler d1 migrations apply tech-support-services-db --remote
+```
+
+The schema lives in [migrations/0001_initial.sql](./migrations/0001_initial.sql).
+
+### 4. Create the Cloudflare Pages project from GitHub
+
+In the Cloudflare dashboard:
+
+1. Go to `Workers & Pages`
+2. Click `Create application`
+3. Choose `Pages`
+4. Connect your GitHub repo: `jmadk/tech-support-services`
+5. Use:
+   - Production branch: `main`
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+
+### 5. Add the D1 binding and owner email
+
+In the Pages project settings:
+
+1. Open `Settings` -> `Functions`
+2. Add a D1 binding:
+   - Variable name: `DB`
+   - Database: `tech-support-services-db`
+3. Add an environment variable:
+   - `OWNER_EMAIL=chegekeith4@gmail.com`
+
+Then redeploy the Pages project.
+
+### 6. Open the live site
+
+Cloudflare will give you a public `*.pages.dev` URL that works on any device.
+
+### Accessing the live database
+
+You can inspect live consultations in two ways.
+
+Cloudflare dashboard:
+
+1. Open `Storage & Databases`
+2. Open your D1 database
+3. Use the query console or table browser
+
+Wrangler terminal:
+
+```bash
+npx wrangler d1 execute tech-support-services-db --remote --command "SELECT * FROM consultations ORDER BY created_at DESC;"
+```
+
+Examples:
+
+```bash
+npx wrangler d1 execute tech-support-services-db --remote --command "SELECT * FROM users ORDER BY created_at DESC;"
+npx wrangler d1 execute tech-support-services-db --remote --command "SELECT * FROM saved_services ORDER BY saved_at DESC;"
+```
+
+### About email notifications
+
+The Cloudflare deployment keeps the owner inbox, Gmail reply action, and WhatsApp follow-up inside the dashboard.
+
+The previous SMTP-based notification flow is still available in the local Node API, but it is not automatically wired into the Cloudflare Pages Functions version yet. For the hosted version, the main follow-up workflow is:
+
+- open `Client Inbox`
+- reply in Gmail using `chegekeith4@gmail.com`
+- contact the client on WhatsApp
+- track status in the dashboard
 
 ## Email notifications for consultations
 
@@ -81,3 +151,4 @@ When this is configured:
 - The frontend talks to the backend through `/api` requests.
 - If you want a different API URL, set `VITE_API_URL`.
 - The backend uses Node's built-in `node:sqlite`, so use a recent Node 22+ release.
+- The Cloudflare production deployment uses D1 instead of the local `app.db` file.
