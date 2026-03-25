@@ -82,8 +82,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           setTimeout(() => { onClose(); resetForm(); }, 2000);
         }
       } else if (view === 'forgot') {
-        // For forgot password, we just show a success message
-        setSuccess('If an account exists with this email, you will receive a password reset link.');
+        setSuccess('Password reset email is not set up on the live site yet. Please contact support or create a new password through the account settings after signing in.');
       }
     } catch (err: any) {
       setServerError(err.message || 'An unexpected error occurred');
@@ -97,7 +96,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const titles: Record<AuthView, { heading: string; sub: string }> = {
     login: { heading: 'Welcome Back', sub: 'Sign in to access your dashboard' },
     signup: { heading: 'Create Account', sub: 'Join us and explore our services' },
-    forgot: { heading: 'Reset Password', sub: 'Enter your email to receive a reset link' },
+    forgot: { heading: 'Reset Password', sub: 'Password reset email is not configured on the live site yet' },
   };
 
   return (
