@@ -1,6 +1,14 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tech-support-services",
-  "compatibility_date": "2026-03-25",
-  "pages_build_output_dir": "./dist"
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "tech-support-services",
+	"compatibility_date": "2026-03-25",
+	"pages_build_output_dir": "./dist",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "tech-support-services-db",
+			"database_id": "59a97784-e1f3-434a-b37c-f115af7b1220",
+			"remote": true
+		}
+	]
 }
