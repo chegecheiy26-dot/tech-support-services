@@ -55,6 +55,18 @@ function createId(byteLength = 16) {
   return bytesToHex(bytes);
 }
 
+function combineBytes(left, right) {
+  const combined = new Uint8Array(left.length + right.length);
+  combined.set(left);
+  combined.set(right, left.length);
+  return combined;
+}
+
+async function sha256(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return new Uint8Array(digest);
+}
+
 async function derivePasswordHash(password, salt) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -80,43 +92,60 @@ async function derivePasswordHash(password, salt) {
 
 async function hashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await derivePasswordHash(password, salt);
-  return `pbkdf2_sha256$${PASSWORD_ITERATIONS}$${bytesToHex(salt)}$${bytesToHex(hash)}`;
+  const passwordBytes = encoder.encode(password);
+  const hash = await sha256(combineBytes(salt, passwordBytes));
+  return `sha256$${bytesToHex(salt)}$${bytesToHex(hash)}`;
 }
 
 async function verifyPassword(password, storedHash) {
-  const [algorithm, iterationsValue, saltHex, hashHex] = String(storedHash || "").split("$");
-  if (algorithm !== "pbkdf2_sha256") {
-    return false;
+  const parts = String(storedHash || "").split("$");
+  const [algorithm] = parts;
+
+  if (algorithm === "sha256") {
+    const [, saltHex, hashHex] = parts;
+    if (!saltHex || !hashHex) {
+      return false;
+    }
+
+    const salt = hexToBytes(saltHex);
+    const expected = hexToBytes(hashHex);
+    const passwordBytes = encoder.encode(password);
+    const actual = await sha256(combineBytes(salt, passwordBytes));
+    return constantTimeEqual(actual, expected);
   }
 
-  const iterations = Number(iterationsValue);
-  if (!Number.isFinite(iterations) || !saltHex || !hashHex) {
-    return false;
+  if (algorithm === "pbkdf2_sha256") {
+    const [, iterationsValue, saltHex, hashHex] = parts;
+    const iterations = Number(iterationsValue);
+    if (!Number.isFinite(iterations) || !saltHex || !hashHex) {
+      return false;
+    }
+
+    const salt = hexToBytes(saltHex);
+    const expected = hexToBytes(hashHex);
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"],
+    );
+
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations,
+      },
+      key,
+      expected.length * 8,
+    );
+
+    return constantTimeEqual(new Uint8Array(bits), expected);
   }
 
-  const salt = hexToBytes(saltHex);
-  const expected = hexToBytes(hashHex);
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
-
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations,
-    },
-    key,
-    expected.length * 8,
-  );
-
-  return constantTimeEqual(new Uint8Array(bits), expected);
+  return false;
 }
 
 function sanitizeUser(row) {
