@@ -172,9 +172,49 @@ const ServicesGrid: React.FC = () => {  const navigate = useNavigate();  const {
   const [serviceCertificationStarted, setServiceCertificationStarted] = useState<Record<number, boolean>>({});
 
   const certificationCatalog: Record<string, {sessions: string[]}> = {
-    'Database Systems': { sessions: ['Introduction to Databases (1h)', 'Data Modeling & ERD (1h 30m)', 'SQL Basics & Advanced Queries (1h 30m)'] },
-    'Data Communications & Networks': { sessions: ['Networking Fundamentals (1h)', 'TCP/IP & OSI Models (1h 30m)', 'Routing & Switching (1h 30m)'] },
-    'Distributed Systems': { sessions: ['Distributed System Concepts (1h)', 'Consensus & Fault Tolerance (1h 30m)', 'Microservices Architecture (1h)'] },
+    'Database Systems': {
+      sessions: [
+        'Introduction to Databases (1h)',
+        'Data Modeling & ERD (1h 30m)',
+        'SQL Basics & Advanced Queries (1h 30m)',
+        'Database Design Principles (1h)',
+        'Indexing & Optimization (1h)',
+        'Transactions & Concurrency (1h)',
+        'Stored Procedures & Views (1h)',
+        'Database Security & Access Control (1h)',
+        'Distributed Databases & Replication (1h 30m)',
+        'Backup & Recovery (1h)',
+        'Database Administration & Monitoring (1h)',
+      ],
+    },
+    'Data Communications & Networks': {
+      sessions: [
+        'Networking Fundamentals (1h)',
+        'TCP/IP & OSI Models (1h 30m)',
+        'Routing & Switching (1h 30m)',
+        'IP Addressing & Subnetting (1h 30m)',
+        'Network Devices & Media (1h)',
+        'Network Security (1h)',
+        'Wireless & WAN Technologies (1h 30m)',
+        'Network Services & Protocols (1h)',
+        'Network Management & Troubleshooting (1h 30m)',
+        'Network Design Project (1h)',
+      ],
+    },
+    'Distributed Systems': {
+      sessions: [
+        'Distributed System Concepts (1h)',
+        'Consensus & Fault Tolerance (1h 30m)',
+        'Microservices Architecture (1h)',
+        'Scalability & Load Balancing (1h 30m)',
+        'Distributed Communication Patterns (1h)',
+        'Distributed Data Management (1h 30m)',
+        'Cloud Infrastructure Basics (1h)',
+        'Containerization & Orchestration (1h 30m)',
+        'Observability & Monitoring (1h)',
+        'Distributed Systems Capstone (1h)',
+      ],
+    },
   };
 
   // Load saved services for the user
