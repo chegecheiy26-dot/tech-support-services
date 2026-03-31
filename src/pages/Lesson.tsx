@@ -12,8 +12,11 @@ type LessonData = {
   learningObjectives: string[];
   sections: Array<{ title: string; subtopics: Array<{ title: string; content: string[] }> }>;
   keyTerms: string[];
+  background: string[];
+  workedExample: string[];
   practiceTasks: string[];
   summaryPoints: string[];
+  shortTestTips: string[];
   qaQuestions: Array<{ q: string; options: string[]; correct: number }>;
   quizQuestions: Array<{ q: string; options: string[]; correct: number }>;
 };
@@ -924,6 +927,17 @@ function createLessonFromCurriculum(session: CurriculumSession): LessonData {
       },
     ],
     keyTerms: [...session.tools, ...session.concepts].slice(0, 8),
+    background: [
+      `${session.title} sits within the broader computer science curriculum because it helps learners connect theory, systems thinking, and practical implementation.`,
+      `Before studying this topic deeply, recall any earlier ideas related to ${session.concepts[0]}, ${session.concepts[1]}, and ${session.tools[0]}.`,
+      `A strong background in this session helps when handling coursework, projects, support tasks, and later certification assessments.`,
+    ],
+    workedExample: [
+      `Scenario: a learner or practitioner is asked to apply ${session.title} in a real system or project context.`,
+      `Step 1: identify the problem and the concepts from this chapter that matter most, such as ${session.concepts.slice(0, 2).join(' and ')}.`,
+      `Step 2: choose an approach using the relevant tools or methods, including ${session.tools.slice(0, 2).join(' and ')}.`,
+      `Step 3: explain the outcome clearly and relate it to ${session.applications[0]} so the theory becomes practical.`,
+    ],
     practiceTasks: [
       session.lab,
       `Write short notes explaining how ${session.title} fits into the wider ${session.applications[0]} context.`,
@@ -934,6 +948,11 @@ function createLessonFromCurriculum(session: CurriculumSession): LessonData {
       `The session connects key concepts such as ${session.concepts.slice(0, 3).join(', ')} to real computing work.`,
       `You should leave this lesson able to discuss ${session.outcomes[0]}, ${session.outcomes[1]}, and ${session.outcomes[2]}.`,
       `Before progressing, make sure you understand the key terms, practical exercise, and assessment questions.`,
+    ],
+    shortTestTips: [
+      `Review the definitions of ${session.tools.slice(0, 3).join(', ')} before answering the short test.`,
+      `Check that you can explain at least two subtopics from this session in your own words.`,
+      `Use the practice task and worked example as revision references before submitting your answers.`,
     ],
     qaQuestions: [
       {
@@ -1136,6 +1155,16 @@ function buildFallbackLesson(course: string, session: string): LessonData {
       },
     ],
     keyTerms: [courseTitle, sessionTitle, 'theory', 'practice', 'analysis', 'application'],
+    background: [
+      `${sessionTitle} is part of the wider ${courseTitle} learning path and should be read as a foundational chapter rather than a standalone note.`,
+      `This background section helps the learner connect the session to earlier knowledge, practical work, and future assessment tasks.`,
+    ],
+    workedExample: [
+      `Scenario: a learner applies ${sessionTitle} to a practical ${courseTitle} task or project problem.`,
+      `Step 1: identify the important ideas in the topic.`,
+      `Step 2: connect those ideas to a real computing or support situation.`,
+      `Step 3: explain the result clearly and use it as revision before the short test.`,
+    ],
     practiceTasks: [
       `Prepare short notes summarizing the main ideas behind ${sessionTitle}.`,
       `List two practical scenarios where ${sessionTitle} would be useful in ${courseTitle}.`,
@@ -1145,6 +1174,11 @@ function buildFallbackLesson(course: string, session: string): LessonData {
       `${sessionTitle} introduces important ideas used throughout the ${courseTitle} curriculum.`,
       `The lesson should be understood both theoretically and practically.`,
       `The review and quiz stages are meant to confirm readiness before moving to the next session.`,
+    ],
+    shortTestTips: [
+      `Revise the core terms and topic summary before answering.`,
+      `Check that you can explain the lesson without copying the wording directly.`,
+      `Use the practice and worked example sections as your final review.`,
     ],
     qaQuestions: [
       {
@@ -1437,12 +1471,45 @@ const Lesson: React.FC = () => {
               </div>
             </div>
 
+            <div className="mb-8 rounded-2xl border border-sky-400/20 bg-sky-500/10 p-5">
+              <h3 className="text-lg font-semibold text-sky-200 mb-4">Background Reading</h3>
+              <div className="space-y-2">
+                {courseData.background.map((item, idx) => (
+                  <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                    {idx + 1}. {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5">
+              <h3 className="text-lg font-semibold text-rose-200 mb-4">Worked Example</h3>
+              <div className="space-y-2">
+                {courseData.workedExample.map((item, idx) => (
+                  <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                    {idx + 1}. {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+
             <div className="mb-8 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-5">
               <h3 className="text-lg font-semibold text-blue-200 mb-4">Session Summary</h3>
               <div className="space-y-2">
                 {courseData.summaryPoints.map((point, idx) => (
                   <p key={idx} className="text-sm leading-relaxed text-slate-100">
                     {idx + 1}. {point}
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-lime-400/20 bg-lime-500/10 p-5">
+              <h3 className="text-lg font-semibold text-lime-200 mb-4">Short Test Preparation</h3>
+              <div className="space-y-2">
+                {courseData.shortTestTips.map((tip, idx) => (
+                  <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                    {idx + 1}. {tip}
                   </p>
                 ))}
               </div>
