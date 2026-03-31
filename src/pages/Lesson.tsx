@@ -9,7 +9,11 @@ interface LessonPhase {
 type LessonData = {
   title: string;
   notes: string[];
+  learningObjectives: string[];
   sections: Array<{ title: string; subtopics: Array<{ title: string; content: string[] }> }>;
+  keyTerms: string[];
+  practiceTasks: string[];
+  summaryPoints: string[];
   qaQuestions: Array<{ q: string; options: string[]; correct: number }>;
   quizQuestions: Array<{ q: string; options: string[]; correct: number }>;
 };
@@ -869,6 +873,12 @@ function createLessonFromCurriculum(session: CurriculumSession): LessonData {
       `Use the end-of-session questions to confirm you can explain the topic in your own words and apply it in project work.`,
       `As you move through the lesson, focus on how the concepts support software development, infrastructure design, troubleshooting, and professional certification readiness.`,
     ],
+    learningObjectives: [
+      `Explain the main purpose of ${session.title}.`,
+      `Describe the major concepts behind ${session.title}.`,
+      `Apply the ideas in ${session.title} to labs, coursework, and practical computer science tasks.`,
+      `Use the terminology of ${session.title} confidently in discussion and written work.`,
+    ],
     sections: [
       {
         title: 'Topic Overview',
@@ -912,6 +922,18 @@ function createLessonFromCurriculum(session: CurriculumSession): LessonData {
           },
         ],
       },
+    ],
+    keyTerms: [...session.tools, ...session.concepts].slice(0, 8),
+    practiceTasks: [
+      session.lab,
+      `Write short notes explaining how ${session.title} fits into the wider ${session.applications[0]} context.`,
+      `Compare the theory in ${session.title} with one real project or support case you know.`,
+    ],
+    summaryPoints: [
+      `${session.title} is a core session in this curriculum because it builds both theory and practical readiness.`,
+      `The session connects key concepts such as ${session.concepts.slice(0, 3).join(', ')} to real computing work.`,
+      `You should leave this lesson able to discuss ${session.outcomes[0]}, ${session.outcomes[1]}, and ${session.outcomes[2]}.`,
+      `Before progressing, make sure you understand the key terms, practical exercise, and assessment questions.`,
     ],
     qaQuestions: [
       {
@@ -1074,6 +1096,12 @@ function buildFallbackLesson(course: string, session: string): LessonData {
       `As you proceed, connect each concept to a real project or support scenario so the lesson becomes practical and memorable.`,
       `Use the Q&A and quiz sections to confirm understanding before moving to the next milestone.`,
     ],
+    learningObjectives: [
+      `Describe the main purpose of ${sessionTitle}.`,
+      `Identify the important ideas covered in ${sessionTitle}.`,
+      `Relate the lesson to practical work in ${courseTitle}.`,
+      `Prepare for review questions and certification checks based on ${sessionTitle}.`,
+    ],
     sections: [
       {
         title: 'Topic Overview',
@@ -1106,6 +1134,17 @@ function buildFallbackLesson(course: string, session: string): LessonData {
           },
         ],
       },
+    ],
+    keyTerms: [courseTitle, sessionTitle, 'theory', 'practice', 'analysis', 'application'],
+    practiceTasks: [
+      `Prepare short notes summarizing the main ideas behind ${sessionTitle}.`,
+      `List two practical scenarios where ${sessionTitle} would be useful in ${courseTitle}.`,
+      `Discuss the topic with examples from projects, labs, or coursework.`,
+    ],
+    summaryPoints: [
+      `${sessionTitle} introduces important ideas used throughout the ${courseTitle} curriculum.`,
+      `The lesson should be understood both theoretically and practically.`,
+      `The review and quiz stages are meant to confirm readiness before moving to the next session.`,
     ],
     qaQuestions: [
       {
@@ -1214,9 +1253,10 @@ const Lesson: React.FC = () => {
   const session = payload.session || querySession;
 
   const courseData = resolveLessonData(course, session);
-  const sessionLabels = curriculumTracks[course]?.map((item) => item.label) || [];
+  const sessionLabels = resolveTrackSessions(course).map((item) => item.label);
   const currentSessionIndex = sessionLabels.indexOf(session);
   const nextSessionLabel = currentSessionIndex >= 0 ? sessionLabels[currentSessionIndex + 1] || '' : '';
+  const chapterNumber = currentSessionIndex >= 0 ? currentSessionIndex + 1 : 1;
 
   useEffect(() => {
     if (storageKey && course && session) {
@@ -1313,6 +1353,16 @@ const Lesson: React.FC = () => {
               </div>
             </div>
 
+            <div className="mb-6 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-5">
+              <p className="text-xs uppercase tracking-[0.25em] text-cyan-300 mb-2">
+                Chapter {chapterNumber}{sessionLabels.length ? ` of ${sessionLabels.length}` : ''}
+              </p>
+              <h3 className="text-2xl font-bold text-white mb-2">{courseData.title}</h3>
+              <p className="text-sm text-slate-200">
+                This session is arranged like student notes: chapter overview, objectives, topic sections, subtopics, practice work, summary, then assessment.
+              </p>
+            </div>
+
             <div className="space-y-4 mb-6">
               {courseData.notes.map((note, idx) => (
                 <div
@@ -1326,6 +1376,17 @@ const Lesson: React.FC = () => {
                   <p className="text-sm leading-relaxed">{note}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
+              <h3 className="text-lg font-semibold text-emerald-200 mb-4">Learning Objectives</h3>
+              <div className="space-y-2">
+                {courseData.learningObjectives.map((objective, idx) => (
+                  <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                    {idx + 1}. {objective}
+                  </p>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-6 mb-8">
@@ -1350,6 +1411,41 @@ const Lesson: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2 mb-8">
+              <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-5">
+                <h3 className="text-lg font-semibold text-violet-200 mb-4">Key Terms</h3>
+                <div className="flex flex-wrap gap-2">
+                  {courseData.keyTerms.map((term, idx) => (
+                    <span key={idx} className="rounded-full border border-violet-300/30 bg-[#13233b] px-3 py-1 text-sm text-violet-100">
+                      {term}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-5">
+                <h3 className="text-lg font-semibold text-amber-200 mb-4">Practice Tasks</h3>
+                <div className="space-y-2">
+                  {courseData.practiceTasks.map((task, idx) => (
+                    <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                      {idx + 1}. {task}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-5">
+              <h3 className="text-lg font-semibold text-blue-200 mb-4">Session Summary</h3>
+              <div className="space-y-2">
+                {courseData.summaryPoints.map((point, idx) => (
+                  <p key={idx} className="text-sm leading-relaxed text-slate-100">
+                    {idx + 1}. {point}
+                  </p>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-3">
